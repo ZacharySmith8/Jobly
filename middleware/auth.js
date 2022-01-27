@@ -18,9 +18,12 @@ const { UnauthorizedError } = require("../expressError");
 function authenticateJWT(req, res, next) {
   try {
     const authHeader = req.headers && req.headers.authorization;
+    
     if (authHeader) {
       const token = authHeader.replace(/^[Bb]earer /, "").trim();
+      
       res.locals.user = jwt.verify(token, SECRET_KEY);
+      
     }
     return next();
   } catch (err) {
@@ -42,8 +45,39 @@ function ensureLoggedIn(req, res, next) {
   }
 }
 
+function checkAdmin(req,res,next){
+  try{
+    if(!res.locals.user || !res.locals.user.isAdmin){
+      throw new UnauthorizedError();
+    }
+    return next();
+  }
+  catch(e){
+    return next(e);
+  }
+}
+
+function checkUserOrAdmin(req,res,next){
+  try{
+    
+    if(!res.locals.user || !res.locals.user.isAdmin){
+      throw new UnauthorizedError();
+    }
+    console.log(res.locals.user)
+    if(!res.locals.isAdmin && (res.locals.user.username !== req.body.username)){
+      throw new UnauthorizedError("You Dont Have Access To this User");
+    }
+    
+    return next();
+  }
+  catch(e){
+    return next(e)
+  }
+}
 
 module.exports = {
+  checkAdmin,
+  checkUserOrAdmin,
   authenticateJWT,
   ensureLoggedIn,
 };

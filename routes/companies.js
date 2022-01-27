@@ -6,7 +6,7 @@ const jsonschema = require("jsonschema");
 const express = require("express");
 const db = require("../db")
 const { BadRequestError,ExpressError } = require("../expressError");
-const { ensureLoggedIn } = require("../middleware/auth");
+const { ensureLoggedIn,checkAdmin } = require("../middleware/auth");
 const Company = require("../models/company");
 
 const companyNewSchema = require("../schemas/companyNew.json");
@@ -26,6 +26,7 @@ const router = new express.Router();
 
 router.post("/", ensureLoggedIn, async function (req, res, next) {
   try {
+    
     const validator = jsonschema.validate(req.body, companyNewSchema);
     if (!validator.valid) {
       const errs = validator.errors.map(e => e.stack);
@@ -50,11 +51,12 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
  * Authorization required: none
  */
 
-router.get("/", async function (req, res, next) {
+router.get("/",async function (req, res, next) {
   // sets variables based on req.query
   let query = req.query;
   
-  try {
+  
+  try { 
     if(query.maxnumber != undefined){
       query.maxnumber = parseInt(query.maxnumber);
     }

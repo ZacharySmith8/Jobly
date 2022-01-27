@@ -33,8 +33,9 @@ class User {
            FROM users
            WHERE username = $1`,
         [username],
+        
     );
-
+    
     const user = result.rows[0];
 
     if (user) {
@@ -172,7 +173,7 @@ class User {
           isAdmin: "is_admin",
         });
     const usernameVarIdx = "$" + (values.length + 1);
-
+        console.log(usernameVarIdx)
     const querySql = `UPDATE users 
                       SET ${setCols} 
                       WHERE username = ${usernameVarIdx} 
