@@ -11,6 +11,7 @@ const Company = require("../models/company");
 
 const companyNewSchema = require("../schemas/companyNew.json");
 const companyUpdateSchema = require("../schemas/companyUpdate.json");
+const Job = require("../models/job");
 
 const router = new express.Router();
 
@@ -57,15 +58,6 @@ router.get("/",async function (req, res, next) {
   
   
   try { 
-    if(query.maxnumber != undefined){
-      query.maxnumber = parseInt(query.maxnumber);
-    }
-    if(query.minnumber != undefined){
-      query.minnumber = parseInt(query.minnumber)
-    }
-      if(query.minnumber > query.maxnumber){
-        throw new ExpressError(`Invalid: min number:${query.minnumber} can not be greater then max number: ${query.maxnumber}.`,400)
-      }
     const companies = await Company.findAll(query);
     return res.json({ companies });
   } catch (err) {
@@ -83,7 +75,11 @@ router.get("/",async function (req, res, next) {
 
 router.get("/:handle", async function (req, res, next) {
   try {
+   
     const company = await Company.get(req.params.handle);
+    
+    
+   
     return res.json({ company });
   } catch (err) {
     return next(err);

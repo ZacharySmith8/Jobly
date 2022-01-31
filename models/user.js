@@ -49,7 +49,13 @@ class User {
 
     throw new UnauthorizedError("Invalid username/password");
   }
+  static async apply(username,job){
+   
 
+    await db.query(`INSERT INTO applications (username,job_id)
+    VALUES ($1,$2)`, [username,job] )
+    
+  }
   /** Register user with data.
    *
    * Returns { username, firstName, lastName, email, isAdmin }
@@ -134,10 +140,19 @@ class User {
            FROM users
            WHERE username = $1`,
         [username],
+      
     );
+  const appResults = await db.query(
+    `SELECT job_id 
+    FROM applications 
+    WHERE username =$1`, [username]
 
+  )
+
+    const applications = appResults.rows;
     const user = userRes.rows[0];
-
+    user.applications = applications.map(app => app.job_id);
+    
     if (!user) throw new NotFoundError(`No user: ${username}`);
 
     return user;

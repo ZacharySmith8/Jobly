@@ -11,6 +11,7 @@ const User = require("../models/user");
 const { createToken } = require("../helpers/tokens");
 const userNewSchema = require("../schemas/userNew.json");
 const userUpdateSchema = require("../schemas/userUpdate.json");
+const res = require("express/lib/response");
 
 const router = express.Router();
 
@@ -42,6 +43,21 @@ router.post("/", checkAdmin, async function (req, res, next) {
     return next(err);
   }
 });
+
+
+router.post("/:username/jobs/:id", async function(req,res,next) {
+  try{
+    let username = req.params.username;
+    let jobId = parseInt(req.params.id); 
+    console.log(req.params)
+    await User.apply(username,jobId)
+    return res.json({applied: jobId});
+  }
+  catch(err){
+    return next(err);
+  }
+  
+})
 
 
 /** GET / => { users: [ {username, firstName, lastName, email }, ... ] }

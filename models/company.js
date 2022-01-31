@@ -1,3 +1,4 @@
+
 "use strict";
 
 const req = require("express/lib/request");
@@ -52,7 +53,7 @@ class Company {
   
   static async findAll(query) {
     
-    if(query.name != undefined){
+    if(query.name){
       const nameResults = await db.query(`
       SELECT handle,name,description,num_employees as "numEmployees", logo_url AS "logoUrl"
       FROM companies 
@@ -62,7 +63,22 @@ class Company {
       return nameResults.rows;
     } 
     
-    if(query.minnumber !==undefined){
+    if(query.maxnumber !==undefined && query.minnumber !==undefined){
+      query.maxnumber = parseInt(query.maxnumber)
+      query.minnumber = parseInt(query.minnumber)
+      const maxResults = await db.query(`
+      SELECT handle,name,description,num_employees as "numEmployees", logo_url AS "logoUrl"
+      FROM companies 
+      WHERE num_Employees > $1 AND num_Employees < $2
+      `,[query.minnumber,query.maxnumber])
+      if(query.minnumber > query.maxnumber){
+        throw new ExpressError(`Invalid: min number:${query.minnumber} can not be greater then max number: ${query.maxnumber}.`,400)}
+      return maxResults.rows;
+    }
+
+
+    if(query.minnumber){
+      query.minnumber = parseInt(query.minnumber)
       const minResults = await db.query(`
       SELECT handle,name,description,num_employees as "numEmployees", logo_url AS "logoUrl"
       FROM companies 
@@ -73,22 +89,13 @@ class Company {
     }
     
     if(query.maxnumber !==undefined){
+      query.maxnumber = parseInt(query.maxnumber);
       const maxResults = await db.query(`
       SELECT handle,name,description,num_employees as "numEmployees", logo_url AS "logoUrl"
       FROM companies 
       WHERE num_Employees < $1
       `,[query.maxnumber])
       
-      return maxResults.rows;
-    }
-    
-    if(query.maxnumber !==undefined && query.minnumber !==undefined){
-      const maxResults = await db.query(`
-      SELECT handle,name,description,num_employees as "numEmployees", logo_url AS "logoUrl"
-      FROM companies 
-      WHERE num_Employees > $1 AND num_Employees < $2
-      `,[query.minnumber,query.maxnumber])
-    
       return maxResults.rows;
     }
    
@@ -113,17 +120,20 @@ class Company {
 
   static async get(handle) {
     const companyRes = await db.query(
-          `SELECT handle,
-                  name,
-                  description,
-                  num_employees AS "numEmployees",
-                  logo_url AS "logoUrl"
+          `SELECT *
            FROM companies
            WHERE handle = $1`,
         [handle]);
-
+    const jobResults = await db.query(
+      `SELECT *
+      FROM jobs
+      WHERE company_handle= $1
+      `, [handle]
+    )
     const company = companyRes.rows[0];
-
+    const job = jobResults.rows;
+    company.jobs = job;
+    
     if (!company) throw new NotFoundError(`No company: ${handle}`);
 
     return company;
